@@ -1,17 +1,30 @@
-const axios = require('axios');
-const niceList = require('../utils/niceList.json');
-const MerkleTree = require('../utils/MerkleTree');
+const axios = require("axios");
+const niceList = require("../utils/niceList.json");
+const MerkleTree = require("../utils/MerkleTree");
 
-const serverUrl = 'http://localhost:1225';
+const serverUrl = "http://localhost:1225";
+
+const RANDOM_NAME_INDEX = 800;
+const RANDOM_LEAF = niceList[RANDOM_NAME_INDEX];
 
 async function main() {
-  // TODO: how do we prove to the server we're on the nice list? 
+  try {
+    const merkleTree = new MerkleTree(niceList);
+    const root = merkleTree.getRoot();
+    console.log("Merkle root:", root);
 
-  const { data: gift } = await axios.post(`${serverUrl}/gift`, {
-    // TODO: add request body parameters here!
-  });
+    const proof = merkleTree.getProof(RANDOM_NAME_INDEX);
+    console.log(`Merkle proof for ${RANDOM_LEAF}:`, proof);
 
-  console.log({ gift });
+    const { data: gift } = await axios.post(`${serverUrl}/gift`, {
+      proof,
+      leaf: RANDOM_LEAF,
+    });
+
+    console.log({ gift });
+  } catch (error) {
+    console.error("Error verifying gift");
+  }
 }
 
 main();
